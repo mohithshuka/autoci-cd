@@ -52,11 +52,15 @@ Developer → GitHub Push → GitHub Actions
 
 autoci-cd/
 │── app/ # Application code
+
 │── Dockerfile # Docker configuration
+
 │── k8s/ # Kubernetes manifests
+
 │── .github/workflows/ # CI/CD pipeline (GitHub Actions)
+
 │── scripts/ # Helper scripts
-│── README.md
+
 
 
 ---
