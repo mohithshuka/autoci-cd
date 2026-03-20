@@ -1,220 +1,300 @@
-# CI/CD Pipeline with GitHub Actions, ArgoCD & Kubernetes
+# AutoCI-CD — Auto-Scaling CI/CD Deployment System
 
-This project demonstrates a complete CI/CD pipeline for a Node.js application using GitHub Actions, ArgoCD, and Kubernetes.
+> A production-grade, fully automated CI/CD pipeline with auto-scaling and real-time monitoring — inspired by how Netflix and Swiggy handle backend deployments at scale.
 
-## 📋 Table of Contents
+![CI Pipeline](https://github.com/mohithshuka/autoci-cd/actions/workflows/ci.yml/badge.svg)
+![Node.js](https://img.shields.io/badge/Node.js-18-green?logo=node.js)
+![Docker](https://img.shields.io/badge/Docker-Containerized-blue?logo=docker)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-Minikube-326CE5?logo=kubernetes)
+![Helm](https://img.shields.io/badge/Helm-Deployed-0F1689?logo=helm)
+![Grafana](https://img.shields.io/badge/Grafana-Monitored-F46800?logo=grafana)
 
-- [Project Structure](#-project-structure)
-- [Prerequisites](#-prerequisites)
-- [Setup](#-setup)
-- [CI/CD Pipeline](#-cicd-pipeline)
-- [ArgoCD Setup](#-argocd-setup)
-- [Testing](#-testing)
-- [Troubleshooting](#-troubleshooting)
+---
 
-## 🏗️ Project Structure
+## What This Project Does
+
+Every time code is pushed to GitHub:
 
 ```
-automateci-cd/
-├── .github/workflows/   # GitHub Actions CI/CD pipelines
-│   ├── ci.yml             # CI pipeline (build, test, push image)
-│   └── deploy.yml         # CD pipeline (update ArgoCD app)
-├── k8s/                   # Kubernetes manifests
-│   ├── namespace.yaml     # Namespace definition
-│   ├── deployment.yaml    # Deployment with HPA
-│   ├── service.yaml       # Service
-│   ├── ingress.yaml       # Ingress
-│   └── hpa.yaml           # Horizontal Pod Autoscaler
-├── src/                   # Node.js application
-│   ├── app.js             # Express application
-│   ├── package.json       # Dependencies
-│   └── Dockerfile         # Docker image definition
-├── .gitignore             # Git ignore file
-└── README.md              # This file
+git push → tests run → Docker image builds → Kubernetes deploys → HPA scales → Grafana monitors
 ```
 
-## ✅ Prerequisites
+**Zero manual steps. Push code → it ships automatically.**
 
-Before you begin, ensure you have the following set up:
+---
 
-- **GitHub Repository**: A GitHub repository for your project
-- **Docker Hub Account**: To store Docker images
-- **Kubernetes Cluster**: A running Kubernetes cluster
-- **ArgoCD**: Installed on your Kubernetes cluster
-- **kubectl**: Configured to access your cluster
+## Live Monitoring Dashboards
 
-## 🛠️ Setup
+### Kubernetes API Server — Availability & SLI Metrics
+<img width="1874" height="988" alt="Screenshot 2026-03-20 225830" src="https://github.com/user-attachments/assets/6bd0f668-b546-4b56-9066-c71d004a04d5" />
 
-### 1. Configure GitHub Secrets
 
-Add the following secrets to your GitHub repository settings:
+> Real-time availability tracking at **95-98%**, Read SLI requests, error rates and response durations across all Kubernetes components.
 
-| Secret Name | Description |
-|-------------|-------------|
-| `DOCKER_USERNAME` | Your Docker Hub username |
-| `DOCKER_PASSWORD` | Your Docker Hub password |
-| `KUBE_CONFIG` | Base64 encoded kubeconfig file |
-| `ARGOCD_SERVER` | ArgoCD server URL (e.g., `argocd.example.com`) |
-| `ARGOCD_USERNAME` | ArgoCD username |
-| `ARGOCD_PASSWORD` | ArgoCD password |
+---
 
-### 2. Configure ArgoCD
+### Prometheus Overview — Target Discovery & Scrape Health
+<img width="1868" height="1002" alt="Screenshot 2026-03-20 230019" src="https://github.com/user-attachments/assets/0e3bd661-d139-403e-b1dc-e03940db9e45" />
 
-#### Create Namespace
+
+> Prometheus scraping **400+ targets** across the cluster with sub-30ms scrape intervals. Live target sync and appended samples counter.
+
+---
+
+### Alertmanager — Alerts & Notification Routing
+<img width="1839" height="1007" alt="Screenshot 2026-03-20 225904" src="https://github.com/user-attachments/assets/5bcb41e1-c207-4f5f-9782-a353df95c091" />
+
+
+
+> Real-time alert tracking with notification routing to Discord, Email, Jira and Incidentio. Alert receive rate monitored at 0.1 ops/s.
+
+---
+
+## Architecture
+
+```
+Developer
+    │
+    │  git push
+    ▼
+┌─────────────────────────────────┐
+│         GitHub Repository        │
+└─────────────────────────────────┘
+    │
+    │  triggers automatically
+    ▼
+┌─────────────────────────────────┐
+│     GitHub Actions CI Pipeline   │
+│                                  │
+│  ┌────────────┐  ┌────────────┐ │
+│  │ Install &  │─▶│   Build    │ │
+│  │   Test     │  │   Docker   │ │
+│  │ (5 tests)  │  │   Image    │ │
+│  └────────────┘  └────────────┘ │
+└─────────────────────────────────┘
+    │
+    │  deploy
+    ▼
+┌─────────────────────────────────┐
+│    Kubernetes Cluster (Minikube) │
+│                                  │
+│  ┌──────────┐  ┌─────────────┐  │
+│  │ 2-10     │  │  NodePort   │  │
+│  │  Pods    │  │   Service   │  │
+│  │  (HPA)   │  │  port 3000  │  │
+│  └──────────┘  └─────────────┘  │
+└─────────────────────────────────┘
+    │                    │
+    │  scrapes /metrics  │  traffic
+    ▼                    ▼
+┌──────────┐      ┌──────────────┐
+│Prometheus│─────▶│    Grafana   │
+│          │query │  Dashboards  │
+└──────────┘      └──────────────┘
+```
+
+---
+
+## Tech Stack
+
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| Backend | Node.js + Express | REST API with 3 endpoints |
+| Testing | Jest + Supertest | 5 automated tests |
+| Containerization | Docker multi-stage | Production optimized image |
+| CI Pipeline | GitHub Actions | Auto test + build on push |
+| Orchestration | Kubernetes + Minikube | Container management |
+| Auto-scaling | Horizontal Pod Autoscaler | Scale 2 → 10 pods on CPU |
+| Package Manager | Helm | Monitoring stack deployment |
+| Monitoring | Prometheus | Metrics collection + storage |
+| Visualization | Grafana | Real-time dashboards |
+| Metrics SDK | prom-client | Express middleware metrics |
+
+---
+
+## API Endpoints
+
+| Method | Endpoint | Description | Response |
+|--------|----------|-------------|----------|
+| GET | `/health` | App health check | `{status, uptime, timestamp}` |
+| GET | `/api/orders` | Food delivery orders | Array of 3 orders |
+| GET | `/api/stream` | Streaming catalog | Array of 3 shows |
+| GET | `/metrics` | Prometheus scrape | Text/plain metrics |
+
+---
+
+## Project Structure
+
+```
+autoci-cd/
+├── .github/
+│   └── workflows/
+│       └── ci.yml              # GitHub Actions — test + build
+├── k8s/
+│   ├── deployment.yaml         # Kubernetes deployment + service
+│   └── hpa.yaml                # Auto-scaler (2 to 10 pods)
+├── src/
+│   └── app.js                  # Express API + Prometheus metrics
+├── tests/
+│   └── app.test.js             # Jest test suite (5 tests)
+├── docs/
+│   ├── grafana-kubernetes.png  # Dashboard screenshots
+│   ├── grafana-prometheus.png
+│   └── grafana-alertmanager.png
+├── Dockerfile                  # Multi-stage production build
+├── .gitignore
+└── package.json
+```
+
+---
+
+## Getting Started
+
+### Prerequisites
 
 ```bash
-kubectl apply -f k8s/namespace.yaml
+node --version    # v18+
+docker --version  # any
+minikube version  # any
+helm version      # any
 ```
 
-#### Create ArgoCD Application
+### 1. Clone and install
 
 ```bash
-kubectl apply -f k8s/argocd-app.yaml
+git clone https://github.com/mohithshuka/autoci-cd.git
+cd autoci-cd
+npm install
 ```
 
-## 🔄 CI/CD Pipeline
-
-### CI Pipeline (`.github/workflows/ci.yml`)
-
-This pipeline runs automatically on every push to the `main` branch:
-
-1. **Checkout code** - Fetches the latest code
-2. **Login to Docker Hub** - Authenticates with Docker Hub
-3. **Build Docker image** - Builds the Docker image from `Dockerfile`
-4. **Push Docker image** - Pushes the image to Docker Hub
-5. **Update ArgoCD** - Triggers the CD pipeline
-
-### CD Pipeline (`.github/workflows/deploy.yml`)
-
-This pipeline updates the ArgoCD application with the new image tag:
-
-1. **Decode kubeconfig** - Decodes the base64 encoded kubeconfig
-2. **Set kubectl context** - Configures kubectl to use your cluster
-3. **Update ArgoCD app** - Updates the image tag in the ArgoCD application
-
-## 🧪 Testing
-
-### 1. Trigger the Pipeline
-
-Make a change to your application and push to the `main` branch:
+### 2. Run tests
 
 ```bash
-git add .
-git commit -m "Test CI/CD pipeline"
-git push origin main
+npm test
+# 5 tests pass in ~2s
 ```
 
-### 2. Monitor the Pipeline
-
-Check the GitHub Actions tab in your repository to monitor the pipeline progress:
+### 3. Start locally
 
 ```bash
-# Monitor CI pipeline
-github actions list --repo <owner>/<repo>
-
-# Monitor CD pipeline
-github actions list --repo <owner>/<repo>
+npm start
+curl http://localhost:3000/health
 ```
 
-### 3. Verify Deployment
-
-Check the ArgoCD UI or use kubectl to verify the deployment:
+### 4. Deploy to Kubernetes
 
 ```bash
-# Check ArgoCD application status
-kubectl get argocd -n argocd
+# Start cluster
+minikube start --cpus=2 --memory=3500 --driver=docker
+minikube addons enable metrics-server
 
-# Check deployment
-kubectl get deployment -n autoci-app
+# Build image inside Minikube
+minikube image build -t autoci-app:latest .
 
-# Check service
-kubectl get service -n autoci-app
+# Deploy
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/hpa.yaml
 
-# Check ingress
-kubectl get ingress -n autoci-app
+# Get URL
+minikube service autoci-app-service --url
 ```
 
-### 4. Test the Application
-
-Access the application using the ingress URL:
+### 5. Install monitoring
 
 ```bash
-# Get ingress URL
-kubectl get ingress -n autoci-app
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+helm install monitoring prometheus-community/kube-prometheus-stack \
+  --namespace monitoring --create-namespace --skip-crds=false
 
-# Test health endpoint
-curl http://<ingress-url>/health
-
-# Test API endpoint
-curl http://<ingress-url>/api/orders
+# Access Grafana
+kubectl --namespace monitoring port-forward svc/monitoring-grafana 3001:80
+# Open http://localhost:3001  |  admin / your-password
 ```
 
-## 📈 Horizontal Pod Autoscaling (HPA)
+---
 
-The deployment includes HPA to automatically scale the number of pods based on CPU utilization.
+## CI/CD Pipeline Flow
 
-### HPA Configuration
-
-```yaml
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: autoci-app-hpa
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: autoci-app
-  minReplicas: 2
-  maxReplicas: 10
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 50
+```
+┌─────────────────────────────────────────────┐
+│           GitHub Actions ci.yml              │
+│                                              │
+│  on: push to main                            │
+│                                              │
+│  job 1: Install and Test                     │
+│    ├── actions/checkout@v3                   │
+│    ├── actions/setup-node@v3 (Node 18)       │
+│    ├── npm ci                                │
+│    └── npm test → 5 tests must pass          │
+│                                              │
+│  job 2: Build Docker Image (needs: test)     │
+│    ├── actions/checkout@v3                   │
+│    ├── docker build -t autoci-app:SHA .      │
+│    └── docker images autoci-app              │
+└─────────────────────────────────────────────┘
 ```
 
-### Test HPA
+---
 
-Generate load to test the HPA:
+## Auto-Scaling in Action
+
+The HPA monitors CPU across all pods every 15 seconds:
 
 ```bash
-# Generate load
-while true; do curl http://<ingress-url>/api/orders; done
+# Watch scaling happen live
+kubectl get hpa -w
 
-# Monitor HPA
-kubectl get hpa -n autoci-app -w
+# NAME             TARGETS   MINPODS   MAXPODS   REPLICAS
+# autoci-app-hpa   0%/50%    2         10        2
+# autoci-app-hpa   68%/50%   2         10        4   ← scaling up!
+# autoci-app-hpa   82%/50%   2         10        7   ← more pods!
+# autoci-app-hpa   12%/50%   2         10        2   ← scaled back down
 ```
 
-## 🔧 Troubleshooting
+| Setting | Value |
+|---------|-------|
+| Min replicas | 2 |
+| Max replicas | 10 |
+| Scale up trigger | CPU > 50% |
+| Scale down | Automatic |
 
-### Common Issues
+---
 
-| Issue | Solution |
-|-------|----------|
-| Pipeline fails on Docker login | Verify `DOCKER_USERNAME` and `DOCKER_PASSWORD` secrets |
-| ArgoCD app not syncing | Check ArgoCD server URL and credentials |
-| Deployment stuck in Pending | Verify node resources and image pull policy |
-| HPA not scaling | Check CPU utilization and min/max replicas |
-
-### Debugging
+## Startup Commands (after PC restart)
 
 ```bash
-# Check pipeline logs
-github actions logs <run-id>
+# 1. Start cluster
+minikube start --cpus=2 --memory=3500 --driver=docker
 
-# Check ArgoCD application
-kubectl get argocd -n argocd -o yaml
+# 2. Redeploy app
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/hpa.yaml
 
-# Check deployment
-kubectl describe deployment autoci-app -n autoci-app
-
-# Check HPA
-kubectl describe hpa autoci-app-hpa -n autoci-app
+# 3. Start Grafana
+kubectl --namespace monitoring port-forward svc/monitoring-grafana 3001:80
 ```
 
-## 📝 License
+---
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## Key Learnings
+
+- Multi-stage Docker builds keep production images lean
+- Kubernetes liveness and readiness probes prevent bad traffic routing
+- HPA requires `metrics-server` addon to read CPU data
+- `prom-client` middleware instruments every HTTP request automatically
+- GitHub Actions `needs:` keyword gates Docker builds behind passing tests
+- Helm charts deploy entire monitoring stacks with a single command
+
+---
+
+## Author
+
+**Mohith Shuka**
+GitHub: [@mohithshuka](https://github.com/mohithshuka)
+
+---
+
+## License
+
+MIT
