@@ -283,7 +283,7 @@ kubectl --namespace monitoring port-forward svc/monitoring-grafana 3001:80
 - Kubernetes liveness and readiness probes prevent bad traffic routing
 - HPA requires `metrics-server` addon to read CPU data
 - `prom-client` middleware instruments every HTTP request automatically
-- GitHub Actions `needs:` keyword gates Docker builds behind passing tests
+- GitHub Actions `needs:` keyword gates Docker builds behind passing tests.
 - Helm charts deploy entire monitoring stacks with a single command.
 
 ---
