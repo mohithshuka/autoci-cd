@@ -290,7 +290,7 @@ kubectl --namespace monitoring port-forward svc/monitoring-grafana 3001:80
 
 ## Author
 
-**Mohith Shuka**
+**Mohith shuka**
 GitHub: [@mohithshuka](https://github.com/mohithshuka)
 
 ---
